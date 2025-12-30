@@ -33,7 +33,10 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: true
+          push: false
+          no-cache: true
+          provenance: false
+          sbom: false
           tags: |
             ghcr.io/${{ github.repository }}:custom-ui-1.1.4
             ghcr.io/${{ github.repository }}:latest
