@@ -13,7 +13,7 @@ ARG CONTENT_TRANSCODER_COMMIT="9473e22624e3f79a15ff17aa8b975e5c6f62ec17"
 ARG TORRENT_ARCHIVER_COMMIT="5ec51fe299641ca7ed3e5cb19f9a2ab370cca89a"
 ARG SRT2VTT_COMMIT="5a18d26bee380d6964e074713be2a4a98b2d54df"
 ARG TORRENT_HTTP_PROXY_COMMIT="d08b3921bb193ef863c629b96f1c0b5e00b5fc20"
-ARG REST_API_COMMIT="4fe937f800f4d033534be10119e7022ec2888e10"
+ARG REST_API_COMMIT="efb35a9148796d6689d3b9d334b69251cd3aff16"
 
 ARG WEB_UI_REPO="https://github.com/urubrianm/web-ui.git"
 ARG WEB_UI_REF="custom-ui-1.1.4"
@@ -113,7 +113,7 @@ FROM build-app AS build-rest-api
 ARG REST_API_COMMIT
 ENV CGO_ENABLED=0 GOOS=linux
 RUN echo ${REST_API_COMMIT} > /app/bin/rest-api.commit && \
-    git clone https://github.com/webtor-io/rest-api /app/src/rest-api && \
+    git clone https://github.com/urubrianm/rest-api /app/src/rest-api && \
     cd /app/src/rest-api && \
     git checkout ${REST_API_COMMIT} && \
     go build -ldflags '-w -s' -a -installsuffix cgo -o /app/bin/rest-api
