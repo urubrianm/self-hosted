@@ -1,0 +1,47 @@
+#!/command/with-contenv sh
+set -eu
+
+# If not configured, just sleep forever quietly (does not crash container)
+if [ -z "${TMC_API_BASE:-}" ] || [ -z "${TMC_STREAM_APIKEY:-}" ] || [ -z "${TMC_STREAM_SUBDOMAIN:-}" ]; then
+  echo "[tmc-heartbeat] Not configured (missing TMC_API_BASE / TMC_STREAM_APIKEY / TMC_STREAM_SUBDOMAIN)."
+  exec sleep 365d
+fi
+
+INTERVAL="${TMC_HEARTBEAT_SECONDS:-30}"
+HEALTH_URL="${WEBTOR_HEALTH_URL:-http://127.0.0.1:8080/health}"
+
+echo "[tmc-heartbeat] Started. subdomain=${TMC_STREAM_SUBDOMAIN} interval=${INTERVAL}s health=${HEALTH_URL}"
+
+while true; do
+  # Determine availability from local health endpoint (200 => available)
+  CODE="$(curl -s -o /dev/null -w "%{http_code}" "${HEALTH_URL}" || echo 0)"
+  if [ "$CODE" = "200" ]; then
+    AVAILABLE="true"
+    HEALTH_STATUS="ok"
+  else
+    AVAILABLE="false"
+    HEALTH_STATUS="fail"
+  fi
+
+  TS="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+  # IMPORTANT: We intentionally DO NOT send ipAddress. Server should infer from RemoteIpAddress / XFF.
+  BODY="$(cat <<JSON
+{
+  "subdomain": "${TMC_STREAM_SUBDOMAIN}",
+  "available": ${AVAILABLE},
+  "health": { "status": "${HEALTH_STATUS}", "code": ${CODE} },
+  "timestampUtc": "${TS}"
+}
+JSON
+)"
+
+  curl -sS -f \
+    -H "Content-Type: application/json" \
+    -H "X-TMC-STREAM-APIKEY: ${TMC_STREAM_APIKEY}" \
+    -d "${BODY}" \
+    "${TMC_API_BASE%/}/api/streaming-servers/heartbeat" >/dev/null \
+    || echo "[tmc-heartbeat] heartbeat failed (will retry)"
+
+  sleep "${INTERVAL}"
+done

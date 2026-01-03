@@ -197,5 +197,9 @@ RUN find /etc/cont-init.d -type f -exec chmod +x {} +
 
 EXPOSE 8080
 EXPOSE 5432
-
+ENV TMC_API_BASE="https://tmc.iaureolabs.com" \
+    TMC_STREAM_APIKEY="" \
+    TMC_STREAM_SUBDOMAIN="" \
+    TMC_HEARTBEAT_SECONDS="30" \
+    WEBTOR_HEALTH_URL="http://127.0.0.1:8080/health"
 ENTRYPOINT ["/init"]
